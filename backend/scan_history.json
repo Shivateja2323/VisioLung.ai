@@ -83,5 +83,20 @@
     "predicted_class": "Emphysema",
     "confidence": 90.65,
     "timestamp": "2025-11-09T12:38:12.375380"
+  },
+  {
+    "predicted_class": "Hernia",
+    "confidence": 75.95,
+    "timestamp": "2025-11-09T17:00:02.740785"
+  },
+  {
+    "predicted_class": "Atelectasis",
+    "confidence": 87.18,
+    "timestamp": "2025-11-09T21:31:11.711668"
+  },
+  {
+    "predicted_class": "Atelectasis",
+    "confidence": 87.18,
+    "timestamp": "2025-11-09T21:32:01.037849"
   }
 ]

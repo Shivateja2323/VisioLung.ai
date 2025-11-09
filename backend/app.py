@@ -583,54 +583,224 @@ def chat():
         if not message:
             return jsonify({"error": "Message is required"}), 400
         
-        # Medical knowledge base for common questions
+        # All diseases supported by the model
+        SUPPORTED_DISEASES = [
+            "atelectasis", "cardiomegaly", "effusion", "infiltration",
+            "mass", "nodule", "pneumonia", "pneumothorax",
+            "consolidation", "edema", "emphysema", "fibrosis",
+            "pleural thickening", "hernia"
+        ]
+        
+        # Comprehensive medical knowledge base for all 14 diseases
         medical_kb = {
-            'infiltration': "Infiltration in a chest X-ray refers to areas where fluid, cells, or other substances have accumulated in the lung tissue, making it appear denser or whiter than normal. This can indicate conditions like pneumonia, pulmonary edema, or inflammation.",
-            'pneumonia': "Pneumonia is an infection that inflames the air sacs in one or both lungs. The air sacs may fill with fluid or pus, causing symptoms like cough, fever, and difficulty breathing. It's typically diagnosed through chest X-rays showing infiltrates or consolidation.",
-            'effusion': "Pleural effusion is the accumulation of excess fluid in the space between the lungs and the chest wall (pleural space). On an X-ray, it appears as a white area at the bottom of the lung, often causing the lung to appear smaller.",
-            'fibrosis': "Pulmonary fibrosis is a condition where lung tissue becomes damaged and scarred, making it thicker and stiffer. This makes it harder for the lungs to work properly. On X-rays, it appears as increased white markings or reticular patterns.",
-            'atelectasis': "Atelectasis is the collapse or closure of a lung, resulting in reduced or absent gas exchange. It can appear as areas of increased density or reduced lung volume on chest X-rays.",
-            'inflammation': "Lung inflammation can be reduced by: 1) Avoiding smoking and secondhand smoke, 2) Using air purifiers, 3) Staying hydrated, 4) Eating anti-inflammatory foods (fruits, vegetables, omega-3), 5) Getting regular exercise, 6) Avoiding pollutants and allergens, 7) Following prescribed medications from your doctor.",
+            'atelectasis': {
+                'description': "Atelectasis is the collapse or closure of a lung, resulting in reduced or absent gas exchange. It occurs when the tiny air sacs (alveoli) in the lung deflate or become filled with fluid.",
+                'xray_appearance': "On chest X-rays, atelectasis appears as areas of increased density, reduced lung volume, or displacement of structures like the heart or diaphragm.",
+                'causes': "Common causes include blockage of airways, pressure on the lung from outside, fluid accumulation, or post-surgical complications.",
+                'symptoms': "Symptoms may include difficulty breathing, chest pain, and coughing. However, small areas of atelectasis may be asymptomatic.",
+                'treatment': "Treatment depends on the cause and may include deep breathing exercises, chest physiotherapy, removal of airway blockages, or addressing underlying conditions."
+            },
+            'cardiomegaly': {
+                'description': "Cardiomegaly is an enlargement of the heart. It's not a disease itself but rather a sign of an underlying condition affecting the heart.",
+                'xray_appearance': "On chest X-rays, cardiomegaly appears as an enlarged heart shadow. The cardiothoracic ratio (heart width to chest width) is typically greater than 50%.",
+                'causes': "Common causes include high blood pressure, heart valve disease, cardiomyopathy, coronary artery disease, and fluid around the heart (pericardial effusion).",
+                'symptoms': "Symptoms may include shortness of breath, fatigue, chest pain, irregular heartbeat, and swelling in the legs or abdomen.",
+                'treatment': "Treatment focuses on managing the underlying cause and may include medications (ACE inhibitors, beta-blockers), lifestyle changes, or in severe cases, surgery."
+            },
+            'effusion': {
+                'description': "Pleural effusion is the accumulation of excess fluid in the space between the lungs and the chest wall (pleural space). This space normally contains a small amount of fluid for lubrication.",
+                'xray_appearance': "On chest X-rays, pleural effusion appears as a white area at the bottom of the lung, often causing the lung to appear smaller and creating a meniscus (curved) appearance.",
+                'causes': "Causes include congestive heart failure, pneumonia, cancer, pulmonary embolism, kidney disease, and autoimmune conditions.",
+                'symptoms': "Symptoms include shortness of breath, chest pain (especially when breathing), dry cough, and difficulty lying flat.",
+                'treatment': "Treatment depends on the cause and may include draining the fluid (thoracentesis), treating the underlying condition, or in some cases, surgery."
+            },
+            'infiltration': {
+                'description': "Infiltration in a chest X-ray refers to areas where fluid, cells, or other substances have accumulated in the lung tissue, making it appear denser or whiter than normal.",
+                'xray_appearance': "On chest X-rays, infiltrates appear as patchy or diffuse white areas in the lung fields, indicating abnormal density.",
+                'causes': "Common causes include pneumonia, pulmonary edema (fluid in lungs), inflammation, infection, or bleeding into the lung tissue.",
+                'symptoms': "Symptoms vary by cause but may include cough, fever, shortness of breath, chest pain, and fatigue.",
+                'treatment': "Treatment depends on the underlying cause - antibiotics for infections, diuretics for fluid overload, or addressing the specific condition causing the infiltration."
+            },
+            'mass': {
+                'description': "A lung mass is an abnormal growth or lesion in the lung tissue that appears as a distinct, well-defined area on imaging.",
+                'xray_appearance': "On chest X-rays, masses appear as well-defined, rounded or irregular opacities that are typically larger than 3 cm in diameter.",
+                'causes': "Causes can be benign (non-cancerous) such as granulomas, hamartomas, or infections, or malignant (cancerous) such as lung cancer.",
+                'symptoms': "Symptoms may include persistent cough, chest pain, coughing up blood, weight loss, and shortness of breath, though some masses are asymptomatic.",
+                'treatment': "Treatment depends on whether the mass is benign or malignant. Benign masses may be monitored, while malignant masses require cancer treatment including surgery, chemotherapy, or radiation."
+            },
+            'nodule': {
+                'description': "A lung nodule is a small, round or oval-shaped growth in the lung tissue, typically smaller than 3 cm in diameter.",
+                'xray_appearance': "On chest X-rays, nodules appear as small, well-defined, round or oval opacities in the lung fields.",
+                'causes': "Most nodules are benign and can be caused by old infections (granulomas), scar tissue, or inflammation. Some may be early-stage cancers.",
+                'symptoms': "Most small nodules are asymptomatic and are discovered incidentally on imaging. Larger nodules may cause symptoms similar to masses.",
+                'treatment': "Small nodules are often monitored with follow-up imaging. Larger or suspicious nodules may require biopsy or removal, depending on size, growth, and appearance."
+            },
+            'pneumonia': {
+                'description': "Pneumonia is an infection that inflames the air sacs in one or both lungs. The air sacs may fill with fluid or pus, causing difficulty breathing.",
+                'xray_appearance': "On chest X-rays, pneumonia appears as areas of consolidation (white, dense areas) or infiltrates in the lung tissue, often in a specific pattern depending on the type of pneumonia.",
+                'causes': "Caused by bacteria, viruses, or fungi. Common bacterial causes include Streptococcus pneumoniae, while viral causes include influenza and COVID-19.",
+                'symptoms': "Symptoms include cough (with or without phlegm), fever, chills, difficulty breathing, chest pain, fatigue, and sometimes nausea or vomiting.",
+                'treatment': "Treatment depends on the cause: antibiotics for bacterial pneumonia, antiviral medications for viral pneumonia, rest, fluids, and supportive care. Severe cases may require hospitalization."
+            },
+            'pneumothorax': {
+                'description': "Pneumothorax is the presence of air in the pleural space (between the lung and chest wall), causing the lung to collapse partially or completely.",
+                'xray_appearance': "On chest X-rays, pneumothorax appears as a dark area (air) with no lung markings, and the edge of the collapsed lung may be visible. The lung appears smaller.",
+                'causes': "Can be spontaneous (occurring without injury, often in tall, thin young men) or traumatic (from injury, medical procedures, or underlying lung disease).",
+                'symptoms': "Symptoms include sudden sharp chest pain, shortness of breath, rapid heart rate, and in severe cases, cyanosis (bluish skin) and shock.",
+                'treatment': "Small pneumothoraces may resolve on their own. Larger ones require removal of air via needle aspiration or chest tube insertion. Recurrent cases may need surgery."
+            },
+            'consolidation': {
+                'description': "Consolidation occurs when the air spaces in the lungs are filled with fluid, pus, blood, or cells, replacing the normal air-filled spaces.",
+                'xray_appearance': "On chest X-rays, consolidation appears as dense, white areas that obscure normal lung markings and blood vessels.",
+                'causes': "Common causes include pneumonia, pulmonary edema (heart failure), lung cancer, and bleeding into the lungs.",
+                'symptoms': "Symptoms include cough, fever, difficulty breathing, chest pain, and production of sputum, depending on the underlying cause.",
+                'treatment': "Treatment targets the underlying cause: antibiotics for infection, diuretics for fluid overload, or specific treatments for cancer or other conditions."
+            },
+            'edema': {
+                'description': "Pulmonary edema is the accumulation of fluid in the air spaces and tissues of the lungs, making breathing difficult.",
+                'xray_appearance': "On chest X-rays, pulmonary edema appears as fluffy, bilateral infiltrates, often in a 'bat wing' pattern, with enlarged heart and fluid in the pleural spaces.",
+                'causes': "Most commonly caused by heart failure (cardiogenic), but can also result from kidney failure, severe infections, drug reactions, or high altitudes.",
+                'symptoms': "Symptoms include severe shortness of breath, difficulty breathing when lying flat, anxiety, coughing up pink, frothy sputum, and chest pain.",
+                'treatment': "Treatment includes oxygen therapy, diuretics to remove excess fluid, medications to improve heart function, and addressing the underlying cause. This is a medical emergency."
+            },
+            'emphysema': {
+                'description': "Emphysema is a chronic lung condition where the air sacs (alveoli) are damaged and enlarged, reducing the surface area for gas exchange.",
+                'xray_appearance': "On chest X-rays, emphysema appears as hyperinflated lungs (lungs appear larger), flattened diaphragm, and decreased lung markings. The chest may appear barrel-shaped.",
+                'causes': "Most commonly caused by long-term smoking. Other causes include exposure to air pollution, chemical fumes, dust, and rare genetic conditions (alpha-1 antitrypsin deficiency).",
+                'symptoms': "Symptoms include shortness of breath (especially with exertion), chronic cough, wheezing, chest tightness, and fatigue. Symptoms develop gradually over years.",
+                'treatment': "Treatment includes smoking cessation, bronchodilators, inhaled steroids, oxygen therapy, pulmonary rehabilitation, and in severe cases, lung volume reduction surgery or lung transplant."
+            },
+            'fibrosis': {
+                'description': "Pulmonary fibrosis is a condition where lung tissue becomes damaged and scarred, making it thicker and stiffer. This makes it harder for the lungs to work properly.",
+                'xray_appearance': "On chest X-rays, fibrosis appears as increased white markings (reticular patterns), honeycombing in advanced cases, and reduced lung volume.",
+                'causes': "Causes include long-term exposure to toxins (asbestos, silica), radiation therapy, certain medications, autoimmune diseases, and idiopathic (unknown cause) pulmonary fibrosis.",
+                'symptoms': "Symptoms include progressive shortness of breath, dry cough, fatigue, unexplained weight loss, and clubbing of fingers and toes.",
+                'treatment': "Treatment includes medications to slow progression (pirfenidone, nintedanib), oxygen therapy, pulmonary rehabilitation, and in some cases, lung transplant. There is no cure, but treatment can slow progression."
+            },
+            'pleural thickening': {
+                'description': "Pleural thickening is the scarring and thickening of the pleura (the membrane covering the lungs and lining the chest cavity), often due to inflammation or injury.",
+                'xray_appearance': "On chest X-rays, pleural thickening appears as irregular, thickened white lines along the edges of the lungs or chest wall.",
+                'causes': "Common causes include asbestos exposure, previous infections (tuberculosis, empyema), trauma, radiation therapy, and inflammatory conditions.",
+                'symptoms': "Many cases are asymptomatic. When symptoms occur, they may include shortness of breath, chest pain, and reduced lung function.",
+                'treatment': "Treatment depends on the cause and severity. Mild cases may be monitored, while severe cases affecting lung function may require surgical intervention (pleurectomy)."
+            },
+            'hernia': {
+                'description': "A diaphragmatic hernia occurs when abdominal organs protrude through an opening in the diaphragm into the chest cavity.",
+                'xray_appearance': "On chest X-rays, a hernia appears as abnormal shadows or opacities in the lower chest, often with displacement of normal structures.",
+                'causes': "Can be congenital (present at birth) or acquired through trauma, surgery, or increased pressure in the abdomen.",
+                'symptoms': "Symptoms vary but may include difficulty breathing, chest pain, heartburn, difficulty swallowing, and in severe cases, respiratory distress.",
+                'treatment': "Treatment depends on severity. Small, asymptomatic hernias may be monitored, while larger or symptomatic hernias typically require surgical repair."
+            }
         }
         
-        # Simple keyword-based response (can be replaced with actual LLM API)
+        # Keywords that indicate out-of-scope questions (non-lung/chest X-ray related)
+        out_of_scope_keywords = [
+            'diabetes', 'diabetic', 'blood sugar', 'insulin', 'glucose',
+            'heart attack', 'stroke', 'brain', 'neurological', 'headache', 'migraine',
+            'kidney', 'liver', 'stomach', 'digestive', 'gastrointestinal', 'ulcer',
+            'bone', 'fracture', 'arthritis', 'joint', 'spine', 'back pain',
+            'eye', 'vision', 'retina', 'cataract',
+            'skin', 'rash', 'dermatology', 'acne',
+            'cancer'  # Too general - we'll check if it's lung cancer specifically
+        ]
+        
+        # Lung/chest X-ray related keywords (in scope)
+        in_scope_keywords = [
+            'lung', 'chest', 'x-ray', 'xray', 'pulmonary', 'respiratory', 'breathing',
+            'atelectasis', 'cardiomegaly', 'effusion', 'infiltration', 'mass', 'nodule',
+            'pneumonia', 'pneumothorax', 'consolidation', 'edema', 'emphysema',
+            'fibrosis', 'pleural', 'thickening', 'hernia', 'alveoli', 'bronchi',
+            'diagnosis', 'scan', 'image', 'radiology', 'radiologist'
+        ]
+        
         message_lower = message.lower()
         response = None
         
-        # General responses with priority
-        if 'reduce' in message_lower and 'inflammation' in message_lower:
-            response = medical_kb['inflammation']
-        elif 'explain' in message_lower and 'diagnosis' in message_lower:
-            if context:
-                response = f"Based on your scan results, {context}This means the AI model has detected potential abnormalities in your chest X-ray. However, this is a screening tool and not a replacement for professional medical evaluation. Please consult with a qualified radiologist or pulmonologist for a comprehensive diagnosis and treatment plan."
-            else:
-                response = "To explain a diagnosis, please first upload and analyze an X-ray image. Then I can provide detailed explanations based on the results."
-        elif 'what does' in message_lower:
-            # Check if asking about a specific medical term
-            found_term = False
-            for term in medical_kb.keys():
-                if term in message_lower:
-                    response = medical_kb[term]
-                    found_term = True
+        # Check if question is out of scope
+        is_out_of_scope = False
+        out_of_scope_term = None
+        
+        # Check for out-of-scope terms (but allow if lung/chest context is present)
+        for term in out_of_scope_keywords:
+            if term in message_lower:
+                # Check if there's lung/chest context
+                has_lung_context = any(keyword in message_lower for keyword in in_scope_keywords)
+                if not has_lung_context:
+                    is_out_of_scope = True
+                    out_of_scope_term = term
                     break
-            if not found_term:
-                response = "I can help explain medical terms related to chest X-rays and lung conditions. Try asking about specific terms like 'infiltration', 'pneumonia', 'effusion', or 'fibrosis'."
-        else:
-            # Check medical terms
-            for term, explanation in medical_kb.items():
-                if term in message_lower:
-                    if context and ('explain' in message_lower or 'diagnosis' in message_lower):
-                        response = f"Based on your current scan ({context}), {explanation}"
-                    else:
-                        response = explanation
-                    break
+        
+        # If out of scope, return error message
+        if is_out_of_scope:
+            response = f"❌ I'm sorry, but I can only answer questions related to chest X-rays and lung conditions detected by this system. Your question seems to be about {out_of_scope_term}, which is outside my scope.\n\nPlease ask relevant questions about:\n• Chest X-ray interpretation\n• Lung diseases (Atelectasis, Pneumonia, Effusion, Fibrosis, etc.)\n• Medical terms related to chest imaging\n• Your X-ray scan results\n\nI can help explain diagnoses, medical terminology, and provide information about the 14 lung conditions this system can detect."
+            return jsonify({"response": response})
+        
+        # Check if asking about a specific disease
+        found_disease = None
+        for disease in SUPPORTED_DISEASES:
+            if disease in message_lower:
+                found_disease = disease
+                break
+        
+        # Handle different question types
+        if found_disease:
+            disease_info = medical_kb[found_disease]
             
-            # If context exists and no specific term found, provide general diagnosis explanation
-            if not response and context and ('explain' in message_lower or 'diagnosis' in message_lower or 'tell' in message_lower):
-                response = f"Based on your scan results, {context}This indicates potential abnormalities detected by the AI. Please consult with a qualified healthcare professional for a comprehensive diagnosis and treatment plan."
-            elif not response:
-                # Default helpful response
-                response = "I'm here to help answer questions about chest X-rays, lung conditions, and medical terminology. You can ask me to explain diagnoses, medical terms, or ask for general lung health advice. For specific medical concerns, please consult with a healthcare professional."
+            # Determine what aspect they're asking about
+            if any(word in message_lower for word in ['what is', 'what does', 'explain', 'tell me about', 'meaning']):
+                response = f"**{found_disease.capitalize()}**\n\n{disease_info['description']}\n\n**X-ray Appearance:** {disease_info['xray_appearance']}\n\n**Common Causes:** {disease_info['causes']}\n\n**Symptoms:** {disease_info['symptoms']}\n\n**Treatment:** {disease_info['treatment']}"
+                
+                if context:
+                    response = f"Based on your scan results showing {context.strip()}, here's information about **{found_disease.capitalize()}**:\n\n{response}\n\n⚠️ **Important:** This is AI-assisted screening. Please consult with a qualified radiologist or pulmonologist for professional medical interpretation and treatment recommendations."
+            elif any(word in message_lower for word in ['symptom', 'sign', 'feel', 'experience']):
+                response = f"**Symptoms of {found_disease.capitalize()}:**\n\n{disease_info['symptoms']}"
+            elif any(word in message_lower for word in ['cause', 'why', 'reason', 'due to']):
+                response = f"**Causes of {found_disease.capitalize()}:**\n\n{disease_info['causes']}"
+            elif any(word in message_lower for word in ['treatment', 'treat', 'cure', 'medicine', 'medication', 'therapy']):
+                response = f"**Treatment for {found_disease.capitalize()}:**\n\n{disease_info['treatment']}\n\n⚠️ **Important:** Always consult with a healthcare professional for proper diagnosis and treatment. This information is for educational purposes only."
+            elif any(word in message_lower for word in ['x-ray', 'xray', 'appearance', 'look like', 'show', 'detect']):
+                response = f"**X-ray Appearance of {found_disease.capitalize()}:**\n\n{disease_info['xray_appearance']}"
+            else:
+                # General information about the disease
+                response = f"**{found_disease.capitalize()}**\n\n{disease_info['description']}\n\n**X-ray Appearance:** {disease_info['xray_appearance']}"
+                
+        # Handle diagnosis explanation requests
+        elif any(word in message_lower for word in ['explain', 'diagnosis', 'result', 'scan', 'what does this mean']):
+            if context:
+                response = f"Based on your scan results: {context.strip()}\n\nThis indicates that the AI model has detected potential abnormalities in your chest X-ray. The system analyzes X-ray images to identify signs of various lung conditions.\n\n⚠️ **Important:** This is an AI-assisted screening tool and not a replacement for professional medical evaluation. Please consult with a qualified radiologist or pulmonologist for:\n• Comprehensive diagnosis\n• Detailed interpretation of your X-ray\n• Treatment recommendations\n• Follow-up care\n\nWould you like me to explain more about the detected condition?"
+            else:
+                response = "To explain a diagnosis, please first upload and analyze an X-ray image. Once you have scan results, I can provide detailed explanations about the detected conditions.\n\nYou can ask me questions like:\n• 'Explain this diagnosis'\n• 'What does [disease name] mean?'\n• 'Tell me about pneumonia'\n• 'What are the symptoms of effusion?'"
+        
+        # Handle general lung health questions
+        elif any(word in message_lower for word in ['lung health', 'healthy lungs', 'lung care', 'prevent', 'reduce inflammation']):
+            if 'inflammation' in message_lower:
+                response = "**Ways to Reduce Lung Inflammation:**\n\n1. **Avoid smoking and secondhand smoke** - This is the most important step\n2. **Use air purifiers** - Especially in areas with poor air quality\n3. **Stay hydrated** - Drink plenty of water\n4. **Eat anti-inflammatory foods** - Fruits, vegetables, omega-3 rich foods\n5. **Get regular exercise** - Improves lung function\n6. **Avoid pollutants and allergens** - Use masks in polluted areas\n7. **Follow prescribed medications** - As directed by your doctor\n8. **Practice deep breathing exercises** - Can help improve lung capacity\n\n⚠️ If you're experiencing persistent lung inflammation, please consult with a healthcare professional."
+            else:
+                response = "**Tips for Maintaining Lung Health:**\n\n1. **Don't smoke** - Avoid all tobacco products\n2. **Exercise regularly** - Improves lung capacity and function\n3. **Avoid air pollution** - Use air purifiers, avoid high-pollution areas\n4. **Practice deep breathing** - Strengthens respiratory muscles\n5. **Get regular check-ups** - Especially if you have risk factors\n6. **Stay hydrated** - Helps keep lung tissue healthy\n7. **Eat a healthy diet** - Rich in antioxidants and anti-inflammatory foods\n8. **Get vaccinated** - Flu and pneumonia vaccines can protect lung health\n\n⚠️ For personalized advice, please consult with a healthcare professional."
+        
+        # Handle questions about what the system can do
+        elif any(word in message_lower for word in ['what can you', 'help', 'capabilities', 'what do you', 'assist']):
+            response = "I'm your AI medical assistant specialized in chest X-ray analysis. I can help you with:\n\n✅ **Explain diagnoses** - Understand what your X-ray results mean\n✅ **Medical terminology** - Learn about lung conditions and X-ray findings\n✅ **Disease information** - Get details about the 14 conditions I can detect:\n   • Atelectasis, Cardiomegaly, Effusion, Infiltration\n   • Mass, Nodule, Pneumonia, Pneumothorax\n   • Consolidation, Edema, Emphysema, Fibrosis\n   • Pleural Thickening, Hernia\n✅ **X-ray interpretation** - Understand how conditions appear on X-rays\n✅ **General lung health** - Tips for maintaining healthy lungs\n\n⚠️ **Important:** I provide educational information only. Always consult with qualified healthcare professionals for medical diagnosis and treatment."
+        
+        # Handle general greetings
+        elif any(word in message_lower for word in ['hello', 'hi', 'hey', 'greetings']):
+            response = "👋 Hello! I'm your AI medical assistant specialized in chest X-ray analysis. I can help explain diagnoses, medical terms, and answer questions about lung health and the 14 conditions this system can detect.\n\nHow can I assist you today? You can ask me:\n• About your X-ray results\n• To explain medical terms\n• Questions about specific lung conditions\n• General lung health tips"
+        
+        # If no specific match found, check if it's a general medical question
+        elif any(word in message_lower for word in ['medical', 'doctor', 'hospital', 'treatment', 'medicine']):
+            # Check if it's related to lungs/chest
+            if any(keyword in message_lower for keyword in in_scope_keywords):
+                response = "I can help answer questions about chest X-rays and lung conditions. Could you please be more specific? For example:\n• 'What is pneumonia?'\n• 'Explain my diagnosis'\n• 'What does effusion mean?'\n• 'Tell me about lung nodules'"
+            else:
+                response = "❌ I'm specialized in chest X-ray analysis and lung conditions only. Please ask relevant questions about:\n• Chest X-ray interpretation\n• Lung diseases (the 14 conditions this system detects)\n• Medical terms related to chest imaging\n• Your X-ray scan results\n\nFor questions about other medical topics, please consult with a healthcare professional."
+        
+        # Default response for unrecognized but potentially relevant questions
+        else:
+            # Check if it contains any lung/chest related keywords
+            if any(keyword in message_lower for keyword in in_scope_keywords):
+                response = "I understand you're asking about chest X-rays or lung health. Could you please rephrase your question? For example:\n• 'What is [disease name]?'\n• 'Explain my diagnosis'\n• 'Tell me about pneumonia'\n• 'What are the symptoms of effusion?'\n\nI can provide information about the 14 lung conditions this system can detect and help interpret X-ray results."
+            else:
+                response = "❌ I'm sorry, but I can only answer questions related to chest X-rays and lung conditions. Your question seems to be outside my scope.\n\nPlease ask relevant questions about:\n• Chest X-ray interpretation and analysis\n• Lung diseases (Atelectasis, Pneumonia, Effusion, Fibrosis, Mass, Nodule, etc.)\n• Medical terms related to chest imaging\n• Your X-ray scan results\n• General lung health\n\nI can help explain diagnoses, medical terminology, and provide information about the 14 lung conditions this system can detect."
         
         return jsonify({"response": response})
         
