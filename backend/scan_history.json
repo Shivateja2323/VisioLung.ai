@@ -1,0 +1,87 @@
+[
+  {
+    "predicted_class": "Hernia",
+    "confidence": 76.14,
+    "timestamp": "2025-11-08T04:30:28.664436"
+  },
+  {
+    "predicted_class": "Hernia",
+    "confidence": 78.43,
+    "timestamp": "2025-11-08T04:30:46.498462"
+  },
+  {
+    "predicted_class": "Cardiomegaly",
+    "confidence": 79.22,
+    "timestamp": "2025-11-08T23:04:39.975185"
+  },
+  {
+    "predicted_class": "Mass",
+    "confidence": 79.49,
+    "timestamp": "2025-11-08T23:18:24.463005"
+  },
+  {
+    "predicted_class": "Mass",
+    "confidence": 79.49,
+    "timestamp": "2025-11-08T23:18:34.324996"
+  },
+  {
+    "predicted_class": "Cardiomegaly",
+    "confidence": 82.99,
+    "timestamp": "2025-11-09T01:09:18.956493"
+  },
+  {
+    "predicted_class": "Cardiomegaly",
+    "confidence": 79.22,
+    "timestamp": "2025-11-09T02:32:51.872571"
+  },
+  {
+    "predicted_class": "Cardiomegaly",
+    "confidence": 79.22,
+    "timestamp": "2025-11-09T02:33:39.928983"
+  },
+  {
+    "predicted_class": "Pneumothorax",
+    "confidence": 77.22,
+    "timestamp": "2025-11-09T02:53:25.358524"
+  },
+  {
+    "predicted_class": "Emphysema",
+    "confidence": 91.06,
+    "timestamp": "2025-11-09T11:46:41.424197"
+  },
+  {
+    "predicted_class": "Emphysema",
+    "confidence": 91.06,
+    "timestamp": "2025-11-09T11:59:04.412284"
+  },
+  {
+    "predicted_class": "Emphysema",
+    "confidence": 90.65,
+    "timestamp": "2025-11-09T12:13:28.866154"
+  },
+  {
+    "predicted_class": "Emphysema",
+    "confidence": 93.01,
+    "timestamp": "2025-11-09T12:23:29.724982"
+  },
+  {
+    "predicted_class": "Emphysema",
+    "confidence": 90.65,
+    "timestamp": "2025-11-09T12:25:50.905605"
+  },
+  {
+    "predicted_class": "Emphysema",
+    "confidence": 90.65,
+    "timestamp": "2025-11-09T12:29:20.199773"
+  },
+  {
+    "predicted_class": "Atelectasis",
+    "confidence": 92.21,
+    "timestamp": "2025-11-09T12:34:56.155023"
+  },
+  {
+    "predicted_class": "Emphysema",
+    "confidence": 90.65,
+    "timestamp": "2025-11-09T12:38:12.375380"
+  }
+]
