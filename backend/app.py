@@ -429,7 +429,7 @@ def gradcam_endpoint():
 # ============================================================
 # 4️⃣ Nearby Pulmonologists (Google Maps API)
 # ============================================================
-GOOGLE_API_KEY = "AIzaSyCSy1oUBtfMefoerSKT8T0O26HHtDtlJ44"
+GOOGLE_API_KEY = "YOUR GOOGLE API KEY"
 
 @app.route('/nearby_pulmonologists', methods=['POST'])
 def nearby_pulmonologists():
